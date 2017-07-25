@@ -1,0 +1,140 @@
+/************************************************************
+************************************************************/
+■making 3ds max data.
+[環境]
+	・3ds max 2018
+		システム基本単位		1cm
+		ディスプレイ基本単位	1cm
+		
+	・unity 5.3.0
+	
+	
+[tips]
+・	Biped setting
+		脊椎のリンク(Pelvis) = 2
+		骨盤の三角リンク: off
+		首の三角リンク	: on
+		
+		->スケマティク ビューにて階層構造をcheck
+			cf.スケマティク：biped.png
+
+・	physic modifier
+		別ポリゴンを同じbipedにリンクさせる時：それぞれphysic modifierをaddすればOK.
+		頭などは、
+			頂点 - リンクの割り当て
+			x 変形可能
+			o リジッド
+		とすればOK.
+
+
+・	Bipedは、FBX export時、非表示設定になるようだ
+・	Bipedの接地キーについて
+		例えば、frame:0 にキーを設定した場合、max上では意図通りAnimationするが、FBXでは「キーなし」と同様の動作となった。
+		frame:0, frame:x(例えば 20)に打つと、所望の動作となった(接地キー自体は問題なく使えるようだ)。
+
+・	FBXの書き出し 1
+		file/書き出し
+		->autodesk fbx
+		
+		warningが出たので、animationをbakeしてoutputした(cf:output fbx.png)
+		physic modifierに関するwarningは無視(depricatedと言われた).
+		
+		外部textureを反映させる場合は、「メディアを埋め込む」check boxをon.
+		
+		その他のoptionはdefaultのまま.
+	
+・	FBXの書き出し 2
+		file/書き出し：ゲームエクスポータ
+		http://artawa.hatenablog.com/entry/2017/04/30/235240
+		
+		note
+			書き出し 1で問題なかったので、特に使う必要はないが、こちらでも問題なく動作した.
+
+・	座標系の違い : FBXの書き出し 1
+		拡張オプション/ 軸変換
+			Up軸 = Y-up
+		がDefault設定になっており、Unity用の座標系に変換されていた。
+		
+		max 8の時は、これを指定するoptionがなかった。
+
+
+■《Unity備忘録》3DCGで設定したアニメーションをUnityで制御する方法
+	http://www.pointcloud.jp/blog_n29/
+	
+	contents
+		上記(3ds max)で作成したFBX fileの読み込み.
+		
+	my note after readinf this page.
+		＜2＞UnityでFBXを読み込みアニメーションの初期設定
+			にてAnimation clipを定義すると、これらがProject view内Asset、
+			3ds maxからimportしたAssetにAnimation clipとして定義が追加される。
+			
+			これを使って、animator(Controller)の設定を行うこと.
+			
+		
+		作成したanimationを再生するだけの場合、RigはGenericのままでOK.
+		Genericのままの方が、HumanoidよりもBiped設定に関する制限等が少ないように見えた.
+		OptiTrackなどからmotion capture dataを使用する場合、これをHumanoidに設定する。
+		Humanoidに設定した際、問題なく変換されるためのmax data作成が上記「making 3ds max data」.
+		ただし、このように処置したfileでも
+			A Biped was detected. Default Biped mapping and T-pose have been configured for this avatar.
+			Translation DoFs have been activated,
+			Use configure to modify default Biped setup.
+		とnoteが表示される.
+		おそらく、名前などがUnityのそれと異なるので、Biped用に準備したDefault mappingで変換したよ。
+		と言っている。
+		animation再生、motion capture、双方の使用法にて、特に問題なさそうなので、OKとしよう.
+		
+		Humanoid時のみの問題だが、
+		animationの「ブレンディングや遷移のとき」にmodelが浮いてしまう問題が発生した。
+		animation clip inspectorにて、
+			RootTransform Position(Y)
+				Bake Info Pose		x
+				Based Upon			Feet /* ★★★ */
+				Offset				0
+		とすることで回避できた。
+		この設定は、animation clipごとにあるので注意。
+
+
+/************************************************************
+Animation clip inspector
+Root transform
+************************************************************/
+■ルートモーションの仕組み
+	https://docs.unity3d.com/jp/540/Manual/RootMotion.html
+	
+	contents
+		Root Transform Position (Y)
+			Feet オプションにより、高さを変える Animation Clip では便利です (Bake Into Pose が無効化されているとき)。 
+			Feet を使用するとき Root Transform Position Y はすべてのフレームでもっとも低い足の Y と一致します。
+			したがってブレンドされる場所は足の付近にあり、ブレンディングや遷移のときに浮いてしまう問題は回避できます。
+			
+			注)本設定は、animation clipごとに存在する.
+			
+			
+■アニメーションクリップ
+	https://docs.unity3d.com/ja/540/Manual/class-AnimationClip.html
+	
+
+■Unity : アニメーションとGameObjectの位置を同期させたい時に気をつけること			
+	http://indie-du.com/entry/2016/05/14/095612
+	
+	contents
+		Root Transform Position (Y)のBake Into Pose にチェック.
+		インスペクタの値を眺めていると、Y座標が0のままであることがわかります。
+
+		これの何がまずいかって、何らかのコライダーを付けている場合、コライダーのY座標が変わらないんですよ。
+		つまり、ジャンプしているように見えるのに、足元の障害物に引っ掛かってしまうという状況が発生してしまいます。
+		
+		BakeIntoPoseのチェックを外すことで、アニメーションとGameObjectの位置の同期がとれます。
+		もちろんApplyRootMotionのチェックも入れます。
+
+
+
+/************************************************************
+IK/ FK
+************************************************************/
+■
+
+
+
