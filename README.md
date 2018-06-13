@@ -8,7 +8,11 @@
 ## oF add on ##
 
 ## Contents ##
-3ds maxで作成したassetをUnityに読み込むためのtips.
+3ds maxで作成したassetをUnityに読み込むためのtips.  
+  
+最新調査記事はこちら  
+3dsMax_to_Unity  
+https://github.com/SJ-magic-study-unity/3dsMax_to_Unity  
 
 ## Device ##
 
